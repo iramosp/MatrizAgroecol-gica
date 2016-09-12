@@ -3,37 +3,44 @@ import numpy as np
 from scipy.integrate import odeint
 
 
-def matriz_agroecologica(poblacion_0, tipo, t_total, n_especies, f, r_alea, a_alea, m_milpa, m_intensivo, D, vecinos):
-    """matriz_agroecologica iteraciones migración y muerte y luego lotka:  
-    poblacion = [tiempo] [x][y] [especieA][especieB][...]
-
+def matriz_agroecologica(paisaje, matriz_interacciones, tasas_reproduccion, condiciones_iniciales, t_total, Dispersion, Mortalidad, pasos_mm=2):
+    """Modelando la matriz agroecológica. Los pasos que sigue el modelo son: dinámica de poblaciones Lotka-Volterra -> (migración -> muerte) x pasos_mm. La población se guarda en cada iteración de LV y en cada iteración de migración+muerte. Regresa un arreglo de numpy con la poblacion en cada paso, con forma:
+    poblacion = [(pasos_mm +1 ) * t_total + 1, x_celdas, y_celdas, n_especies]
     """
-    #corre simulacion en 2D
-    poblacion = [poblacion_0] #inicializa array poblacion de 3 dimensiones con forma (x,y,n_especies)
-    for t in range(t_total):
-        temp = np.zeros_like(poblacion[-1])        
-        for i in range(iter_difymuerte):
-            for i in range(x_celdas): #para todo x y
-                for j in range(y_celdas):
-                    if tipo[i][j] == 'm': #milpa
-                        temp[i][j] = muerte(poblacion[-1][i][j], m_milpa)
-                    elif tipo[i][j] == 'i': #intensivo
-                        temp[i][j] = muerte(poblacion[-1][i][j], m_intensivo)
-                    elif tipo[i][j] == 'b':
-                        temp[i][j] = poblacion[-1][i][j]
-            #migracion
-            #for i in range(n_especies):
-                #si quieres variar la taza de migracion por especie aqui es donde debes de variarla            
-            temp = migracion(temp, tipo, Disp)
-            poblacion.append(temp)
-        #interacciones ecologicas y muerte
+
+    x_celdas = len(paisaje)
+    y_celdas = len(paisaje[1])
+    n_especies = len(matriz_interacciones)
+
+    # Inicializar un arreglo de numpy de la forma: poblacion = [tiempo] [x][y] [especieA][especieB][...]
+    poblacion = np.zeros(((pasos_mm +1 ) * t_total + 1, x_celdas, y_celdas, n_especies))
+
+    # Población inicial con las condiciones iniciales en las celdas de bosque   
+    poblacion[0,:,:,:] = genera_poblacion_inicial(paisaje, n_especies, p0_bosque = condiciones_iniciales)
+
+    for t in range(1, t_total+1):
+        T = (pasos_mm + 1) * t - pasos_mm
+
+        poblacion[T, :, :, :] = copy.deepcopy(poblacion[T-1, :, :, :])
+
+        # Dinámica de poblaciones en bosque
         for i in range(x_celdas): #para todo x y
             for j in range(y_celdas):
-                if tipo[i][j] == 'b': #interacciones ecologicas
-                    temp[i][j] = odeint(f, poblacion[-1][i][j], [0,1], args=(r_alea,a_alea))[-1]
-        poblacion.append(temp)
-    return np.array(poblacion)  
+                if paisaje[i][j] == "b":
+                    poblacion[T, i, j, :] = odeint(lotka, poblacion[T, i, j, :], [0, 1], 
+                                            args=(tasas_reproduccion, matriz_interacciones))[-1]
+    
+        for k in range(1, pasos_mm + 1):
+            # Migración
+            poblacion[T + k, :, :, :] = migracion(poblacion[T + k -1, :, :, :] , paisaje, Dispersion)
 
+            # Muerte
+            for i in range(x_celdas): #para todo x y
+                for j in range(y_celdas):
+                    tasa_muerte = Mortalidad[paisaje[i][j]]
+                    poblacion[T + k, i, j, :] = (1-tasa_muerte) * poblacion[T + k, i, j, :]
+
+    return poblacion
 
 def migracion(X, tp, L):
     """
@@ -73,13 +80,13 @@ def migracion(X, tp, L):
         G[:,:,idx] = gain_e
         R[:,:,idx] = esp +( gain_e - loss_e )
       
-    return R   
+    return R
 
 
-def lotka(x,t,r_alea, a_alea):
-    """ecuacion de lotka volterra generalizada
+def lotka(x, t, r, a):
+    """Ecuacion de lotka volterra generalizada
     """
-    dx = x*(r_alea+np.dot(a_alea,x))
+    dx = x * (r + np.dot(a, x))
     return dx 
 
 
