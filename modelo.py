@@ -90,48 +90,31 @@ def lotka(x, t, r, a):
     return dx 
 
 
-def genera_poblacion_inicial(tipo_matriz_agroecologica, n_especies, p0_bosque=0, p0_milpa=0, p0_intensivo=0): #Poblacion inicial
-    if type(p0_bosque)==float: #all same value
-        p0_bosque = [p0_bosque for i in range(n_especies)]
-    elif type(p0_bosque)==int: #users
-        p0_bosque = [p0_bosque for i in range(n_especies)]
-    elif p0_bosque=="eq_caos":p0_bosque = [ 0.3013,  0.4586,  0.1307,  0.3557]
-    
-    if type(p0_milpa)==float: #all same value
-        p0_milpa = [p0_milpa for i in range(n_especies)]
-    elif type(p0_milpa)==int: #users
-        p0_milpa = [p0_milpa for i in range(n_especies)]
-        
-    if type(p0_intensivo)==float: #all same value
-        p0_intensivo = [p0_intensivo for i in range(n_especies)]
-    elif type(p0_intensivo)==int: #users
-        p0_intensivo = [p0_intensivo for i in range(n_especies)]
-    
-    poblacion_0 = copy.deepcopy(tipo)
-    for x in range(len(tipo)): #inicializar poblaciones
-        for y in range(len(tipo[0])):
-            if tipo[x][y] == 'b': 
-                if p0_bosque=="random": poblacion_0[x][y] = [1/random.random() for i in range(n_especies)]
-                else: poblacion_0[x][y] = p0_bosque
-            if tipo[x][y] == 'm': 
-                if p0_milpa=="random": poblacion_0[x][y] = [random.random() for i in range(n_especies)]
-                else: poblacion_0[x][y] = p0_milpa
-            if tipo[x][y] == 'i': 
-                if p0_intensivo=="random": poblacion_0[x][y] = [random.random() for i in range(n_especies)]              
-                else: poblacion_0[x][y] = p0_intensivo
-                
-    #poblacion_0[1][1] = [0,0,0,0,0,0,0,0,0,0] #para vaciar los 4 bosques de las esquinas 
-    #poblacion_0[1][8] = [0,0,0,0,0,0,0,0,0,0]
-    #poblacion_0[8][1] = [0,0,0,0,0,0,0,0,0,0]
-    #poblacion_0[8][8] = [0,0,0,0,0,0,0,0,0,0]    
-                
-    return np.array(poblacion_0) #array de 3 dimensiones con forma (x,y,n_especies)
+def genera_poblacion_inicial(paisaje, n_especies, p0_bosque, p0_milpa=0, p0_intensivo=0):
+    """
+    Genera la poblacion inicial. Se especifican condiciones iniciales para cada especie, para las celdas de "bosque". Las celdas "milpa" e "intensivo" inician vacías.
+    Recibe: 
+        paisaje: lista de x por y, especifica el tipo de celda ("b" = bosque, "m" = milpa, "i" = intensivo)
+        n_especies: int 
+        p0_bosque: condiciones iniciales para las celdas "bosque". Es numpy array de 1D con forma (n_especies, ).
 
+    Regresa:
+        poblacion_0: numpy array de 3D con forma (x, y, n_especies).
+    """
 
-def muerte(x, m):
-   """recibe x = poblacion   
-        m = taza muerte cte o np.array
-   regresa x = poblacion superviviente  np.array
-   """
-   x = x - x*m
-   return x
+    p0_milpa = [p0_milpa for i in range(n_especies)]
+    p0_intensivo = [p0_intensivo for i in range(n_especies)]
+    
+    poblacion_0 = copy.deepcopy(paisaje)
+    for x in range(len(paisaje)): #inicializar poblaciones
+        for y in range(len(paisaje[0])):
+            if paisaje[x][y] == 'b': 
+                poblacion_0[x][y] = p0_bosque
+
+            if paisaje[x][y] == 'm': 
+                poblacion_0[x][y] = p0_milpa
+           
+            if paisaje[x][y] == 'i': 
+                poblacion_0[x][y] = p0_intensivo
+                
+    return np.array(poblacion_0)
