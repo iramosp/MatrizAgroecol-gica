@@ -1,10 +1,41 @@
-# poblacion = [tiempo] [x][y] [especieA][especieB][...]
-
 import copy, random, math
 import numpy as np
 from scipy.integrate import odeint
 
-def migracion_esp(X, tp, L):
+
+def matriz_agroecologica(poblacion_0, tipo, t_total, n_especies, f, r_alea, a_alea, m_milpa, m_intensivo, D, vecinos):
+    """matriz_agroecologica iteraciones migración y muerte y luego lotka:  
+    poblacion = [tiempo] [x][y] [especieA][especieB][...]
+
+    """
+    #corre simulacion en 2D
+    poblacion = [poblacion_0] #inicializa array poblacion de 3 dimensiones con forma (x,y,n_especies)
+    for t in range(t_total):
+        temp = np.zeros_like(poblacion[-1])        
+        for i in range(iter_difymuerte):
+            for i in range(x_celdas): #para todo x y
+                for j in range(y_celdas):
+                    if tipo[i][j] == 'm': #milpa
+                        temp[i][j] = muerte(poblacion[-1][i][j], m_milpa)
+                    elif tipo[i][j] == 'i': #intensivo
+                        temp[i][j] = muerte(poblacion[-1][i][j], m_intensivo)
+                    elif tipo[i][j] == 'b':
+                        temp[i][j] = poblacion[-1][i][j]
+            #migracion
+            #for i in range(n_especies):
+                #si quieres variar la taza de migracion por especie aqui es donde debes de variarla            
+            temp = migracion(temp, tipo, Disp)
+            poblacion.append(temp)
+        #interacciones ecologicas y muerte
+        for i in range(x_celdas): #para todo x y
+            for j in range(y_celdas):
+                if tipo[i][j] == 'b': #interacciones ecologicas
+                    temp[i][j] = odeint(f, poblacion[-1][i][j], [0,1], args=(r_alea,a_alea))[-1]
+        poblacion.append(temp)
+    return np.array(poblacion)  
+
+
+def migracion(X, tp, L):
     """
     Funcion que asigna cuánta poblacion migra
     dependiendo del parche en el que esté.
@@ -44,33 +75,13 @@ def migracion_esp(X, tp, L):
       
     return R   
 
-#correr_2DMM iteraciones migración y muerte y luego lotka:  
-def correr_2DMM(poblacion_0, tipo, t_total, n_especies, f, r_alea, a_alea, m_milpa, m_intensivo, D, vecinos):
-    #corre simulacion en 2D
-    poblacion = [poblacion_0] #inicializa array poblacion de 3 dimensiones con forma (x,y,n_especies)
-    for t in range(t_total):
-        temp = np.zeros_like(poblacion[-1])        
-        for i in range(iter_difymuerte):
-            for i in range(x_celdas): #para todo x y
-                for j in range(y_celdas):
-                    if tipo[i][j] == 'm': #milpa
-                        temp[i][j] = muerte(poblacion[-1][i][j], m_milpa)
-                    elif tipo[i][j] == 'i': #intensivo
-                        temp[i][j] = muerte(poblacion[-1][i][j], m_intensivo)
-                    elif tipo[i][j] == 'b':
-                        temp[i][j] = poblacion[-1][i][j]
-            #migracion
-            #for i in range(n_especies):
-                #si quieres variar la taza de migracion por especie aqui es donde debes de variarla            
-            temp = migracion_esp(temp, tipo, Disp)
-            poblacion.append(temp)
-        #interacciones ecologicas y muerte
-        for i in range(x_celdas): #para todo x y
-            for j in range(y_celdas):
-                if tipo[i][j] == 'b': #interacciones ecologicas
-                    temp[i][j] = odeint(f, poblacion[-1][i][j], [0,1], args=(r_alea,a_alea))[-1]
-        poblacion.append(temp)
-    return np.array(poblacion)  
+
+def lotka(x,t,r_alea, a_alea):
+    """ecuacion de lotka volterra generalizada
+    """
+    dx = x*(r_alea+np.dot(a_alea,x))
+    return dx 
+
 
 def genera_poblacion_inicial(tipo_matriz_agroecologica, n_especies, p0_bosque=0, p0_milpa=0, p0_intensivo=0): #Poblacion inicial
     if type(p0_bosque)==float: #all same value
@@ -109,13 +120,11 @@ def genera_poblacion_inicial(tipo_matriz_agroecologica, n_especies, p0_bosque=0,
                 
     return np.array(poblacion_0) #array de 3 dimensiones con forma (x,y,n_especies)
 
-def d_lotkavolterra_alea(x,t,r_alea, a_alea): #ecuacion de lotka volterra generalizada
-    dx = x*(r_alea+np.dot(a_alea,x))
-    return dx 
 
 def muerte(x, m):
-   # recibe x = poblacion   
-   #     m = taza muerte cte o np.array
-   # regresa x = poblacion superviviente  np.array
+   """recibe x = poblacion   
+        m = taza muerte cte o np.array
+   regresa x = poblacion superviviente  np.array
+   """
    x = x - x*m
    return x
