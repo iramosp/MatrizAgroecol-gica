@@ -27,7 +27,7 @@ def matriz_agroecologica(paisaje, matriz_interacciones, tasas_reproduccion, cond
         for i in range(x_celdas): #para todo x y
             for j in range(y_celdas):
                 if paisaje[i][j] == "b":
-                    poblacion[T, i, j, :] = odeint(lotka, poblacion[T, i, j, :], [0, 1], 
+                    poblacion[T, i, j, :] = odeint(lotka, poblacion[T, i, j, :], [0, 0.5], 
                                             args=(tasas_reproduccion, matriz_interacciones))[-1]
     
         for k in range(1, pasos_mm + 1):
