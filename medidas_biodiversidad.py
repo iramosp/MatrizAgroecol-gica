@@ -83,7 +83,7 @@ def shannon_wiener(poblacion, paisaje, t=-1, biomasa_min = 5.):
 
     return sw
 
-def medida_prueba(poblacion, paisaje, t=-1, biomasa_min = 5.):
+def medida_area(poblacion, paisaje, t=-1, biomasa_min = 5.):
     """ Entrada: un arreglo poblacion = [tiempo] [x][y] [especieA][especieB][...],
         el paisaje y el tiempo (si no se indica el tiempo se toma la última iteración).
         Salida: la biomasa y la riqueza de especies en UN tiempo, en las celdas que no son bosque;
