@@ -56,25 +56,6 @@ def riqueza_agricola(poblacion, paisaje, t=-1, biomasa_min = 5.):
     return biomasa, len(riqueza[riqueza > biomasa_min])  #riqueza de especies al final de n iteraciones
 
 
-def biomasa_individual(poblacion, paisaje, t=-1):
-    """ Entrada: un arreglo poblacion = [tiempo] [x][y] [especieA][especieB][...],
-        el paisaje y el tiempo (si no se indica el tiempo se toma la última iteración).
-        Salida: la biomasa de cada especie en todo el paisaje;
-        si no se especifica el tiempo se toma la última iteración.
-    """
-    x_celdas = len(paisaje)
-    y_celdas = len(paisaje[1])
-    
-    biomasa_individual = np.zeros(poblacion.shape[3])
-    for idx in range(poblacion.shape[3]):
-        
-        for i in range(x_celdas): #para todo x y
-            for j in range(y_celdas):
-                if paisaje[i][j] != "b":
-                    biomasa_individual[idx] += poblacion[t,i,j,idx]
-
-    return np.array(biomasa_individual)
-
 
 def shannon_wiener(poblacion, paisaje, t=-1, biomasa_min = 5.):
     """ Entrada: un arreglo poblacion = [tiempo] [x][y] [especieA][especieB][...],
