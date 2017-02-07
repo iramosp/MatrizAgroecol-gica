@@ -111,4 +111,4 @@ def medida_area(poblacion, paisaje, t=-1, biomasa_min = 5.):
 
         if riqueza[idx] > biomasa_min and area[idx]>=30:
             vivos[idx] = 1
-    return len(vivos[vivos>0])
+    return len(vivos[vivos>0]), riqueza
